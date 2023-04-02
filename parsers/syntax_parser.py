@@ -1,17 +1,16 @@
+import traceback
+
 class SyntaxParser:
   """
   Parse the style tree into the syntax tree
-
-  Parameters: 
-    style_tree: style tree of the drawio file
   """
 
-  def __init__(self, style_tree):
-    self.style_tree = style_tree
-
-  def convert_to_sytax_tree(self):
+  def convert_to_syntax_tree(self, style_tree):
     """
     Convert the style tree to sytnax tree
+
+    Parameters: 
+      style_tree: style tree of the drawio file
 
     Returns:
       syntax_tree: the syntax tree that is used by the generators  
@@ -21,9 +20,9 @@ class SyntaxParser:
 
     try:
       syntax_tree = dict()
-      cells = self.style_tree['root']['cells']
-      relationships = self.style_tree['root']['relationships']
-      parent = self.style_tree['root']['id']
+      cells = style_tree['root']['cells']
+      relationships = style_tree['root']['relationships']
+      parent = style_tree['root']['id']
 
       propertiesDone = False
 
@@ -57,7 +56,8 @@ class SyntaxParser:
 
       return syntax_tree
     except Exception as e:
-      print(f"SyntaxParser.convert_to_sytax_tree ERROR: {e}")
+      traceback.print_exc()
+      print(f"SyntaxParser.convert_to_syntax_tree ERROR: {e}")
   
   def _tree_template(self, main_cell):
     """
@@ -79,8 +79,10 @@ class SyntaxParser:
         'implements': [],
         'extends': [],
         'association': [],
-        'aggregation': [],
-        'composition': []
+        'aggregationChildren': [],
+        'aggregationParents': [],
+        'compositionChildren': [],
+        'compositionParents': [],
       }
     }
 
@@ -100,7 +102,7 @@ class SyntaxParser:
       template['type'] = "abstract"
     elif template['name'].lower().startswith("<<interface>>"):
       template['type'] = "interface"
-      template['name'] = template['name'][13:]
+      template['name'] = template['name'][13:].strip()
 
     return template
 
@@ -150,6 +152,8 @@ class SyntaxParser:
     """
     
     values = method_dict['values']
+    styles = method_dict['style']
+
     template = dict()
 
     for val in values:
@@ -160,12 +164,22 @@ class SyntaxParser:
 
       val = val.strip()
       access_modifier_symbol = val[0]
-      temp_val = val[1:].split(":")
+      val = val[1:] # remove the access modifier symbol
+
+      parameters = val[val.find("(")+1:val.find(")")].split(",")
+      # check if there are no parameters
+      if len(parameters[0]) == 0:
+        parameters = []
+      else:
+        parameters = [(p.split(":")[0].strip(), p.split(":")[1].strip()) for p in parameters]
+        parameters = [{"name": p[0], "type": p[1]} for p in parameters]
 
       template[_id] = {
         'access': self._get_access_modifier(access_modifier_symbol),
-        'name': temp_val[0].strip(),
-        'return_type': temp_val[1].strip() if len(temp_val) > 1 else "void",
+        'abstract': "true" if 'fontStyle' in styles and styles['fontStyle'] == "2" else "false",
+        'name': val[:val.find("(")].strip(),
+        'parameters': {(i+1): parameters[i] for i in range(len(parameters))},
+        'return_type': val[val.rfind(":")+1:].strip()
       }
 
     return template
@@ -194,7 +208,7 @@ class SyntaxParser:
     Add the relationship for the cells in the syntax tree
 
     Parameters:
-      syntax_tree: the syntax_tree dictionary
+      syntax_tree: syntax tree to add the relationship to
       relationship: relationship to be added to the syntax tree
     """
     
@@ -208,6 +222,7 @@ class SyntaxParser:
     if "endArrow" in style.keys() and (style['endArrow'].lower() == "block" or style['endArrow'].lower() == "none"):
       if style['endArrow'].lower() == "none" or style['endFill'].lower() == "1":
         # association
+        source_cell['relationships']['association'] += [target]
         target_cell['relationships']['association'] += [source]
       elif "dashed" in style.keys() and style['dashed'] == "1":
         # implements 
@@ -217,9 +232,12 @@ class SyntaxParser:
         source_cell['relationships']['extends'] += [target]        
     elif ("endArrow" in style.keys() and style['endArrow'].lower() == "diamondthin") or \
       ("startArrow" in style.keys() and style['startArrow'].lower() == "diamondthin"):
-      if  "endFill" in style.keys() and style['endFill'] == "1":
+      if  ("endFill" in style.keys() and style['endFill'] == "1") or \
+        ("startFill" in style.keys() and style['startFill'] == "1"):
         # composition
-        target_cell['relationships']['composition'] += [source]        
+        source_cell['relationships']['compositionChildren'] += [target]
+        target_cell['relationships']['compositionParents'] += [source]        
       else: 
         # aggregation 
-        target_cell['relationships']['aggregation'] += [source]        
+        source_cell['relationships']['aggregationChildren'] += [target]
+        target_cell['relationships']['aggregationParents'] += [source]        

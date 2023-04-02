@@ -1,15 +1,6 @@
-abstract class Person {
+abstract class Person extends BasePerson {
 
-	private int id;
 	private String name;
-
-	public int getId() {
- 		return this.id; 
-	}
-
-	public void setId(int id) {
- 		this.id = id; 
-	}
 
 	public String getName() {
  		return this.name; 
@@ -18,5 +9,7 @@ abstract class Person {
 	public void setName(String name) {
  		this.name = name; 
 	}
+
+	public abstract void sayGoodbye(String language);
 
 }

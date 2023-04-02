@@ -1,3 +1,4 @@
+import traceback
 from bs4 import BeautifulSoup as bs
 from collections import OrderedDict 
 import re
@@ -5,18 +6,14 @@ import re
 class StyleParser:
   """
   Parse the XML into a style tree
-
-  Parameters: 
-    di_xml: the decoded and decompressed DrawIO XML
   """
 
-  def __init__(self, di_xml):
-    self.di_xml = di_xml
-    self.style_tree = None
-  
-  def convert_to_style_tree(self):
+  def convert_to_style_tree(self, di_xml):
     """
     Convert the XML to a style tree 
+
+    Parameters: 
+      di_xml: the decoded and decompressed DrawIO XML
 
     Returns:
       style_tree: dictionary of the extracted elements from the XML
@@ -25,8 +22,8 @@ class StyleParser:
     print("<<< CONVERTING XML TO STYLE TREE >>>")
 
     try:
-      self.style_tree = dict()
-      graph_model = bs(self.di_xml, "lxml")
+      style_tree = dict()
+      graph_model = bs(di_xml, "lxml")
       root = graph_model.find('root')
       root_children = root.children
 
@@ -42,7 +39,7 @@ class StyleParser:
         if "parent" in child_attrs:
           if child_attrs['parent'] == grandparent:  # found the root parent element
             root_parent = child_attrs['id']
-            self.style_tree['root'] = self._add_root_parent(child_attrs)
+            style_tree['root'] = self._add_root_parent(child_attrs)
           elif "source" in child_attrs or "target" in child_attrs:  # found a relationship element
             if "source" not in child_attrs:  
               print(f"'source' not present in {child_attrs['id']} relationship")
@@ -51,7 +48,7 @@ class StyleParser:
             else:
               relationship_list.append(child_attrs)
           else:  # found a cell element
-            self.style_tree['root']['cells'][child_attrs['id']] = self._add_cells(child_attrs, root_parent)
+            style_tree['root']['cells'][child_attrs['id']] = self._add_cells(child_attrs, root_parent)
         else:  # found the grandparent element  
           if grandparent is None:
             grandparent = child_attrs['id']
@@ -60,10 +57,11 @@ class StyleParser:
       
       # need to process the relationships at the end to get the right source and target
       for child_attrs in relationship_list:
-        self.style_tree['root']['relationships'][child_attrs['id']] = self._add_relationships(child_attrs, root_parent)
+        style_tree['root']['relationships'][child_attrs['id']] = self._add_relationships(child_attrs, style_tree, root_parent)
 
-      return self.style_tree
+      return style_tree
     except Exception as e:
+      traceback.print_exc()
       print(f"StyleParser.convert_to_style_tree ERROR: {e}") 
       return False
   
@@ -85,13 +83,13 @@ class StyleParser:
       'relationships': dict()
     }
   
-  def _add_relationships(self, attrs, root_parent):
+  def _add_relationships(self, attrs, style_tree, root_parent):
     """
     Format dictionary for the relationships
 
     Parameters:
       attrs: the relationship element attributes
-      tree: the style tree, needed to find the parent target
+      style_tree: the style tree, needed to find the parent target
       root_parent: the id of the root parent element 
 
     Returns:
@@ -99,16 +97,16 @@ class StyleParser:
     """
 
     source = attrs['source']
-    parent_source = self.style_tree['root']['cells'][source]['parent_id']
+    parent_source = style_tree['root']['cells'][source]['parent_id']
     while parent_source != root_parent:
       source = parent_source
-      parent_source = self.style_tree['root']['cells'][source]['parent_id']
+      parent_source = style_tree['root']['cells'][source]['parent_id']
     
     target = attrs['target']
-    parent_target = self.style_tree['root']['cells'][target]['parent_id']
+    parent_target = style_tree['root']['cells'][target]['parent_id']
     while parent_target != root_parent:
       target = parent_target
-      parent_target = self.style_tree['root']['cells'][target]['parent_id']
+      parent_target = style_tree['root']['cells'][target]['parent_id']
 
     style = self._get_style(attrs['style'])
 
