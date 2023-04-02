@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class CodeGenerator(ABC):
     """
     Interface contract for code generation
@@ -16,11 +17,11 @@ class CodeGenerator(ABC):
     @abstractmethod
     def get_classes():
         pass
-    
+
     @abstractmethod
     def generate_properties():
         pass
-    
+
     @abstractmethod
     def get_properties():
         pass
@@ -60,7 +61,7 @@ class CodeGenerator(ABC):
     @abstractmethod
     def generate_files():
         pass
-    
+
     @abstractmethod
     def get_files():
         pass
