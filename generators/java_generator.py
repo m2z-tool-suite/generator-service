@@ -382,8 +382,8 @@ class JavaCodeGenerator(CodeGenerator):
         Get the abstract methods that require implementation
 
         Parameters:
-            implements: list of interfaces
             syntax_tree: syntax_tree of the drawio file
+            implements: list of interfaces
             extends: list of classes
             abstract_methods: list of interface methods
         """

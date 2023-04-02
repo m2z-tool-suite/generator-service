@@ -1,11 +1,13 @@
 import shutil
 from flask import Flask, request, send_file, after_this_request
+from flask_cors import CORS
 from decoders.decoder import Decoder
 from parsers.style_parser import StyleParser
 from parsers.syntax_parser import SyntaxParser
 from generators.java_generator import JavaCodeGenerator
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route("/api/generate-code", methods=["POST"])
@@ -16,7 +18,7 @@ def generate():
         return response
 
     try:
-        encoded_xml = request.form["data"]
+        encoded_xml = request.json["data"]
     except:
         return "No data provided", 400
 
