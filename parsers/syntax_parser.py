@@ -89,6 +89,7 @@ class SyntaxParser:
 
         template = {
             "type": "class",
+            "inner": "false",
             "name": main_cell["values"][0] if len(main_cell["values"]) > 0 else "",
             "properties": {},
             "methods": {},
@@ -100,6 +101,7 @@ class SyntaxParser:
                 "aggregationParents": [],
                 "compositionChildren": [],
                 "compositionParents": [],
+                "inner": [],
             },
         }
 
@@ -269,3 +271,9 @@ class SyntaxParser:
                 # aggregation
                 source_cell["relationships"]["aggregationChildren"] += [target]
                 target_cell["relationships"]["aggregationParents"] += [source]
+        elif (
+            "startArrow" in style.keys() and style["startArrow"].lower() == "circleplus"
+        ):
+            # inner class
+            source_cell["relationships"]["inner"] += [target]
+            target_cell["inner"] = "true"

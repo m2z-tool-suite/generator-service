@@ -2,7 +2,6 @@ public class Bank {
 
 	private int id;
 	private String name;
-	private String address;
 	private Customer customer;
 	private Teller teller;
 
@@ -22,14 +21,6 @@ public class Bank {
  		this.name = name; 
 	}
 
-	public String getAddress() {
- 		return this.address; 
-	}
-
-	public void setAddress(String address) {
- 		this.address = address; 
-	}
-
 	public Customer getCustomer() {
  		return this.customer; 
 	}
@@ -44,6 +35,52 @@ public class Bank {
 
 	public void setTeller(Teller teller) {
  		this.teller = teller; 
+	}
+
+	public class Branch {
+
+		private String address;
+		private String phoneNumber;
+
+		public String getAddress() {
+ 			return this.address; 
+		}
+
+		public void setAddress(String address) {
+ 			this.address = address; 
+		}
+
+		public String getPhoneNumber() {
+ 			return this.phoneNumber; 
+		}
+
+		public void setPhoneNumber(String phoneNumber) {
+ 			this.phoneNumber = phoneNumber; 
+		}
+
+		public class Vault {
+
+			private String id;
+			private boolean occupied;
+
+			public String getId() {
+ 				return this.id; 
+			}
+
+			public void setId(String id) {
+ 				this.id = id; 
+			}
+
+			public boolean getOccupied() {
+ 				return this.occupied; 
+			}
+
+			public void setOccupied(boolean occupied) {
+ 				this.occupied = occupied; 
+			}
+
+		}
+
 	}
 
 }

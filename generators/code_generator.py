@@ -15,15 +15,7 @@ class CodeGenerator(ABC):
         pass
 
     @abstractmethod
-    def get_classes():
-        pass
-
-    @abstractmethod
     def generate_properties():
-        pass
-
-    @abstractmethod
-    def get_properties():
         pass
 
     @abstractmethod
@@ -51,17 +43,9 @@ class CodeGenerator(ABC):
         pass
 
     @abstractmethod
-    def get_methods():
-        pass
-
-    @abstractmethod
     def get_abstract_methods():
         pass
 
     @abstractmethod
     def generate_files():
-        pass
-
-    @abstractmethod
-    def get_files():
         pass

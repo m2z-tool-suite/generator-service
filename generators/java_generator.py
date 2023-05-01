@@ -9,12 +9,6 @@ class JavaCodeGenerator(CodeGenerator):
     Generate Java code
     """
 
-    def __init__(self):
-        self.__classes = list()
-        self.__properties = list()
-        self.__methods = list()
-        self.__files = list()
-
     def generate_code(self, syntax_tree, file_path):
         """
         Use the syntax tree to generate code files for the UML class diagrams
@@ -26,98 +20,21 @@ class JavaCodeGenerator(CodeGenerator):
 
         print("<<< GENERATING CODE FILES FROM SYNTAX TREE >>>")
 
-        self.__classes.clear()
-        self.__properties.clear()
-        self.__methods.clear()
-        self.__files.clear()
+        files = []
 
         try:
-            for _, _class in syntax_tree.items():
-                file = ""
+            # get all classes that are not inner classes
+            non_inner = [
+                (_id, _class)
+                for _id, _class in syntax_tree.items()
+                if _class["inner"] == "false"
+            ]
 
-                inheritance = ""
-                if len(_class["relationships"]["extends"]) > 0:
-                    inheritance += "extends "
-                    inheritance += ",".join(
-                        [
-                            syntax_tree[r]["name"]
-                            for r in _class["relationships"]["extends"]
-                        ]
-                    ).strip(",")
+            for _, _class in non_inner:
+                file = self.generate_classes(_class, syntax_tree)
+                files.append([_class["name"], file])
 
-                implementation = ""
-                if len(_class["relationships"]["implements"]) > 0:
-                    implementation += "implements "
-                    implementation += ",".join(
-                        [
-                            syntax_tree[r]["name"]
-                            for r in _class["relationships"]["implements"]
-                        ]
-                    ).strip(",")
-
-                abstract_methods = list()
-                self.get_abstract_methods(
-                    syntax_tree,
-                    _class["relationships"]["implements"],
-                    _class["relationships"]["extends"],
-                    abstract_methods,
-                )
-                abstract_methods.reverse()  # reverse the list so that the abstract methods are in the correct order
-                abstract_methods = [
-                    m
-                    for i, m in enumerate(abstract_methods)
-                    if m not in abstract_methods[:i]
-                ]  # remove duplicate abstract methods
-
-                associations = self.get_associations(
-                    syntax_tree, _class["relationships"]
-                )
-                aggregation_children = self.get_aggregation_children(
-                    syntax_tree, _class["relationships"]
-                )
-                aggregation_parents = self.get_aggregation_parents(
-                    syntax_tree, _class["relationships"]
-                )
-                composition_children = self.get_composition_children(
-                    syntax_tree, _class["relationships"]
-                )
-                composition_parents = self.get_composition_parents(
-                    syntax_tree, _class["relationships"]
-                )
-                # join all associations
-                all_associations = (
-                    associations
-                    + aggregation_children
-                    + aggregation_parents
-                    + composition_children
-                    + composition_parents
-                )
-
-                file += self.generate_classes(
-                    _class["type"], _class["name"], inheritance, implementation
-                )
-                file += "\n"
-                file += self.generate_properties(_class["properties"], all_associations)
-                if (
-                    _class["properties"]
-                    or _class["relationships"]["association"]
-                    or _class["relationships"]["aggregationChildren"]
-                    or _class["relationships"]["aggregationParents"]
-                    or _class["relationships"]["compositionChildren"]
-                    or _class["relationships"]["compositionParents"]
-                ):
-                    file += "\n"
-                file += self.generate_methods(
-                    _class["methods"],
-                    _class["properties"],
-                    all_associations,
-                    _class["type"],
-                    abstract_methods,
-                )
-                file += "}\n"
-                self.__files.append([_class["name"], file])
-
-            self.generate_files(file_path.strip("/"))
+            self.generate_files(file_path.strip("/"), files)
             return True
 
         except Exception as e:
@@ -125,68 +42,137 @@ class JavaCodeGenerator(CodeGenerator):
             print(f"JavaCodeGenerator.generate_code ERROR: {e}")
             return False
 
-    def generate_classes(self, class_type, class_name, extends, implements):
+    def generate_classes(self, _class, syntax_tree, indent=1):
         """
         Generate the class header
 
         Parameters:
-            class_type: type of class; 'class', 'abstract', 'interface'
-            class_name: name of class
-            extends: the classes extended by this class
-            implements: the interfaces implemented by this class
+            _class: dictionary of class to be generated
+            syntax_tree: syntax tree dictionary
+            indent: indentation level
 
         Returns:
-            class_header: class header string
+            class_string: class string
         """
 
-        type_of_class = "public class" if class_type == "class" else class_type
-        type_of_class = (
-            class_type + " class" if class_type == "abstract" else type_of_class
+        class_string = ""
+        tabs = "\t" * (indent - 1)
+
+        inheritance = ""
+        if len(_class["relationships"]["extends"]) > 0:
+            inheritance += "extends "
+            inheritance += ",".join(
+                [syntax_tree[r]["name"] for r in _class["relationships"]["extends"]]
+            ).strip(",")
+
+        implementation = ""
+        if len(_class["relationships"]["implements"]) > 0:
+            implementation += "implements "
+            implementation += ",".join(
+                [syntax_tree[r]["name"] for r in _class["relationships"]["implements"]]
+            ).strip(",")
+
+        abstract_methods = list()
+        self.get_abstract_methods(
+            syntax_tree,
+            _class["relationships"]["implements"],
+            _class["relationships"]["extends"],
+            abstract_methods,
+        )
+        abstract_methods.reverse()  # reverse the list so that the abstract methods are in the correct order
+        abstract_methods = [
+            m for i, m in enumerate(abstract_methods) if m not in abstract_methods[:i]
+        ]  # remove duplicate abstract methods
+
+        associations = self.get_associations(syntax_tree, _class["relationships"])
+        aggregation_children = self.get_aggregation_children(
+            syntax_tree, _class["relationships"]
+        )
+        aggregation_parents = self.get_aggregation_parents(
+            syntax_tree, _class["relationships"]
+        )
+        composition_children = self.get_composition_children(
+            syntax_tree, _class["relationships"]
+        )
+        composition_parents = self.get_composition_parents(
+            syntax_tree, _class["relationships"]
+        )
+        # join all associations
+        all_associations = (
+            associations
+            + aggregation_children
+            + aggregation_parents
+            + composition_children
+            + composition_parents
         )
 
-        class_header = f"{type_of_class} {class_name} {extends} {implements}" + " {\n"
-        class_header = re.sub(" +", " ", class_header)
-        self.__classes.append(class_header)
-        return class_header
+        type_of_class = "public class" if _class["type"] == "class" else _class["type"]
+        type_of_class = (
+            _class["type"] + " class" if _class["type"] == "abstract" else type_of_class
+        )
 
-    def get_classes(self):
-        """
-        Getter for classes
-        """
+        class_string = (
+            f"{tabs}{type_of_class} {_class['name']} {inheritance} {implementation}"
+            + " {\n"
+        )
+        class_string = re.sub(" +", " ", class_string)
 
-        return self.__classes
+        class_string += "\n"
+        class_string += self.generate_properties(
+            _class["properties"], all_associations, indent
+        )
+        if (
+            _class["properties"]
+            or _class["relationships"]["association"]
+            or _class["relationships"]["aggregationChildren"]
+            or _class["relationships"]["aggregationParents"]
+            or _class["relationships"]["compositionChildren"]
+            or _class["relationships"]["compositionParents"]
+        ):
+            class_string += "\n"
 
-    def generate_properties(self, properties, all_asssociations):
+        class_string += self.generate_methods(
+            _class["methods"],
+            _class["properties"],
+            all_associations,
+            _class["type"],
+            abstract_methods,
+            indent,
+        )
+
+        for inner_class_id in _class["relationships"]["inner"]:
+            inner_class = syntax_tree[inner_class_id]
+            class_string += self.generate_classes(inner_class, syntax_tree, indent + 1)
+            class_string += "\n"
+
+        class_string += f"{tabs}}}\n"
+
+        return class_string
+
+    def generate_properties(self, properties, all_asssociations, indent):
         """
         Generate properties for the class
 
         Parameters:
             properties: dictionary of properties
             all_asssociations: list of associations, aggreatation children, aggregation parents, composition children, composition parents
+            indent: indentation level
 
         Returns:
             properties_string: string of the properties
         """
 
         properties_string = ""
+        tabs = "\t" * indent
         for _, _property_value in properties.items():
-            p = f"\t{_property_value['access']} {_property_value['type']} {_property_value['name']};\n"
-            self.__properties.append(p)
+            p = f"{tabs}{_property_value['access']} {_property_value['type']} {_property_value['name']};\n"
             properties_string += p
 
         for association in all_asssociations:
-            p = f"\tprivate {association} {association[0].lower() + association[1:]};\n"
-            self.__properties.append(p)
+            p = f"{tabs}private {association} {association[0].lower() + association[1:]};\n"
             properties_string += p
 
         return properties_string
-
-    def get_properties(self):
-        """
-        Getter for properties
-        """
-
-        return self.__properties
 
     def get_associations(self, syntax_tree, relationships):
         """
@@ -279,7 +265,13 @@ class JavaCodeGenerator(CodeGenerator):
         return composition_parents
 
     def generate_methods(
-        self, methods, properties, all_asssociations, class_type, abstract_methods
+        self,
+        methods,
+        properties,
+        all_asssociations,
+        class_type,
+        abstract_methods,
+        indent,
     ):
         """
         Generate methods for the class
@@ -290,6 +282,7 @@ class JavaCodeGenerator(CodeGenerator):
             all_asssociations: list of associations, aggreatation children, aggregation parents, composition children, composition parents
             class_type: type of current class
             abstract_methods: list of abstract methods
+            indent: indentation level
 
         Returns:
             methods_string: string of the methods
@@ -297,50 +290,46 @@ class JavaCodeGenerator(CodeGenerator):
 
         # getter and setter methods
         methods_string = ""
+        tabs = "\t" * indent
         if class_type == "class" or class_type == "abstract":
             # normal properties
             for _, _property_value in properties.items():
                 if _property_value["access"] == "private":
                     getter = (
-                        f"\tpublic {_property_value['type']} get{_property_value['name'][0].upper() + _property_value['name'][1:]}()"
-                        f" {{\n \t\treturn this.{_property_value['name']}; \n\t}}\n"
+                        f"{tabs}public {_property_value['type']} get{_property_value['name'][0].upper() + _property_value['name'][1:]}()"
+                        f" {{\n {tabs}\treturn this.{_property_value['name']}; \n{tabs}}}\n"
                     )
                     methods_string += getter + "\n"
-                    self.__methods.append(getter)
 
                     setter = (
-                        f"\tpublic void set{_property_value['name'][0].upper() + _property_value['name'][1:]}({_property_value['type']} {_property_value['name']})"
-                        f" {{\n \t\tthis.{_property_value['name']} = {_property_value['name']}; \n\t}}\n"
+                        f"{tabs}public void set{_property_value['name'][0].upper() + _property_value['name'][1:]}({_property_value['type']} {_property_value['name']})"
+                        f" {{\n {tabs}\tthis.{_property_value['name']} = {_property_value['name']}; \n{tabs}}}\n"
                     )
                     methods_string += setter + "\n"
-                    self.__methods.append(setter)
 
             # all association properties
             for association in all_asssociations:
                 getter = (
-                    f"\tpublic {association} get{association[0].upper() + association[1:]}()"
-                    f" {{\n \t\treturn this.{association[0].lower() + association[1:]}; \n\t}}\n"
+                    f"{tabs}public {association} get{association[0].upper() + association[1:]}()"
+                    f" {{\n {tabs}\treturn this.{association[0].lower() + association[1:]}; \n{tabs}}}\n"
                 )
                 methods_string += getter + "\n"
-                self.__methods.append(getter)
 
                 setter = (
-                    f"\tpublic void set{association[0].upper() + association[1:]}({association} {association[0].lower() + association[1:]})"
-                    f" {{\n \t\tthis.{association[0].lower() + association[1:]} = {association[0].lower() + association[1:]}; \n\t}}\n"
+                    f"{tabs}public void set{association[0].upper() + association[1:]}({association} {association[0].lower() + association[1:]})"
+                    f" {{\n {tabs}\tthis.{association[0].lower() + association[1:]} = {association[0].lower() + association[1:]}; \n{tabs}}}\n"
                 )
                 methods_string += setter + "\n"
-                self.__methods.append(setter)
 
         # abstract methods
         if class_type == "class":
             for abstract_method in abstract_methods:
                 comment = "// TODO: Must be implemented!"
                 m = (
-                    f"\t{abstract_method['access']} {abstract_method['return_type']} {abstract_method['name']}()"
-                    f" {{\n \t\t{comment} \n\t}}\n"
+                    f"{tabs}{abstract_method['access']} {abstract_method['return_type']} {abstract_method['name']}()"
+                    f" {{\n {tabs}\t{comment} \n{tabs}}}\n"
                 )
                 methods_string += m + "\n"
-                self.__methods.append(m)
 
         # normal methods
         for _, method_value in methods.items():
@@ -359,23 +348,15 @@ class JavaCodeGenerator(CodeGenerator):
                 )
 
             if method_value["abstract"] == "true" and class_type != "interface":
-                m = f"\t{method_value['access']} abstract {method_value['return_type']} {method_value['name']}{params};\n"
+                m = f"{tabs}{method_value['access']} abstract {method_value['return_type']} {method_value['name']}{params};\n"
             elif method_value["abstract"] == "true" and class_type == "interface":
-                m = f"\t{method_value['access']} {method_value['return_type']} {method_value['name']}{params};\n"
+                m = f"{tabs}{method_value['access']} {method_value['return_type']} {method_value['name']}{params};\n"
             else:
-                m = f"\t{method_value['access']} {method_value['return_type']} {method_value['name']}{params} {{\n\n\t}}\n"
+                m = f"{tabs}{method_value['access']} {method_value['return_type']} {method_value['name']}{params} {{\n\n{tabs}}}\n"
 
             methods_string += m + "\n"
-            self.__methods.append(m)
 
         return methods_string
-
-    def get_methods(self):
-        """
-        Getter for the methods
-        """
-
-        return self.__methods
 
     def get_abstract_methods(self, syntax_tree, implements, extends, abstract_methods):
         """
@@ -416,20 +397,21 @@ class JavaCodeGenerator(CodeGenerator):
                 abstract_methods,
             )
 
-    def generate_files(self, file_path):
+    def generate_files(self, file_path, files):
         """
         Write generated code to file
 
         Returns:
             boolean: True if successful, False if unsuccessful
             file_path: path for the code files to be written to
+            files: list of files to be written
         """
 
         print(f"<<< WRITING FILES TO {file_path} >>>")
 
         try:
             os.makedirs(file_path, exist_ok=True)
-            for file in self.get_files():
+            for file in files:
                 file_name = file[0] + ".java"
                 file_contents = file[1]
                 with open(file_path + f"/{file_name}", "w") as f:
@@ -437,10 +419,3 @@ class JavaCodeGenerator(CodeGenerator):
         except Exception as e:
             traceback.print_exc()
             print(f"JavaCodeGenerator.generate_files ERROR: {e}")
-
-    def get_files(self):
-        """
-        Getter for the files
-        """
-
-        return self.__files

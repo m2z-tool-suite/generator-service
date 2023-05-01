@@ -16,6 +16,8 @@ M2Z Tool Suite service for code generation from draw.io UML class diagrams
 
 - Detects the relationships (extends, implements, association, aggregation, composition) between the classes and checks if they are correct
 
+- Generates inner classes
+
 ## Class diagram example
 
 <div style="display: inline-block">
@@ -28,6 +30,7 @@ M2Z Tool Suite service for code generation from draw.io UML class diagrams
 {
   "id-class": {
     "type": "class | interface | abstract",
+    "inner": "true | false"
     "name": ""
     "properties": {
       "id-property": {
