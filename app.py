@@ -1,16 +1,15 @@
+from config import app, aws_auth
+
 import shutil
-from flask import Flask, request, send_file, after_this_request
-from flask_cors import CORS
+from flask import request, send_file, after_this_request
 from decoders.decoder import Decoder
 from parsers.style_parser import StyleParser
 from parsers.syntax_parser import SyntaxParser
 from generators.java_generator import JavaCodeGenerator
 
-app = Flask(__name__)
-CORS(app)
-
 
 @app.route("/api/generate-code", methods=["POST"])
+@aws_auth.authentication_required
 def generate():
     @after_this_request
     def _(response):
