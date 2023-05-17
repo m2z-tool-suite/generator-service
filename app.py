@@ -22,8 +22,8 @@ def generate():
         return "No data provided", 400
 
     decoded_xml = Decoder().convert(encoded_xml)
-    style_tree = StyleParser().convert_to_style_tree(decoded_xml)
-    syntax_tree = SyntaxParser().convert_to_syntax_tree(style_tree)
+    style_tree = StyleParser().parse(decoded_xml)
+    syntax_tree = SyntaxParser().parse(style_tree)
     code = JavaCodeGenerator().generate_code(syntax_tree, "temp/code")
 
     if not decoded_xml or not style_tree or not syntax_tree or not code:

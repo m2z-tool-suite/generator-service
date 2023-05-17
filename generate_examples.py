@@ -10,10 +10,10 @@ encoded_xml = read_file("examples/example_diagram.drawio")
 decoded_xml = Decoder().convert(encoded_xml)
 save_to_file("examples/example_diagram.xml", decoded_xml)
 
-style_tree = StyleParser().convert_to_style_tree(decoded_xml)
+style_tree = StyleParser().parse(decoded_xml)
 json_to_file("examples/example_style_tree.json", style_tree)
 
-syntax_tree = SyntaxParser().convert_to_syntax_tree(style_tree)
+syntax_tree = SyntaxParser().parse(style_tree)
 json_to_file("examples/example_syntax_tree.json", syntax_tree)
 
 JavaCodeGenerator().generate_code(syntax_tree, "examples/code")

@@ -1,12 +1,13 @@
 import traceback
+from parsers.parser import Parser
 
 
-class SyntaxParser:
+class SyntaxParser(Parser):
     """
     Parse the style tree into the syntax tree
     """
 
-    def convert_to_syntax_tree(self, style_tree):
+    def parse(self, style_tree):
         """
         Convert the style tree to sytnax tree
 
@@ -73,7 +74,7 @@ class SyntaxParser:
             return syntax_tree
         except Exception as e:
             traceback.print_exc()
-            print(f"SyntaxParser.convert_to_syntax_tree ERROR: {e}")
+            print(f"SyntaxParser.parse ERROR: {e}")
             return False
 
     def _tree_template(self, main_cell):

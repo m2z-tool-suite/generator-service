@@ -2,14 +2,15 @@ import traceback
 from bs4 import BeautifulSoup as bs
 from collections import OrderedDict
 import re
+from parsers.parser import Parser
 
 
-class StyleParser:
+class StyleParser(Parser):
     """
     Parse the XML into a style tree
     """
 
-    def convert_to_style_tree(self, di_xml):
+    def parse(self, di_xml):
         """
         Convert the XML to a style tree
 
@@ -75,7 +76,7 @@ class StyleParser:
             return style_tree
         except Exception as e:
             traceback.print_exc()
-            print(f"StyleParser.convert_to_style_tree ERROR: {e}")
+            print(f"StyleParser.parse ERROR: {e}")
             return False
 
     def _add_root_parent(self, attrs):
