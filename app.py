@@ -1,4 +1,5 @@
 from config import app, aws_auth
+from db import save_classes
 
 import shutil
 from flask import request, send_file, after_this_request
@@ -28,6 +29,9 @@ def generate():
 
     if not decoded_xml or not style_tree or not syntax_tree or not code:
         return "Bad data provided", 400
+
+    diagram_id = request.json["id"]
+    save_classes(diagram_id, syntax_tree)
 
     shutil.make_archive("temp/generated-code", "zip", "temp/code")
     return send_file("temp/generated-code.zip", as_attachment=True)

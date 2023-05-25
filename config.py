@@ -6,6 +6,12 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
+app.config["MYSQL_DATABASE_HOST"] = os.getenv("MYSQL_DATABASE_HOST")
+app.config["MYSQL_DATABASE_PORT"] = int(os.getenv("MYSQL_DATABASE_PORT"))
+app.config["MYSQL_DATABASE_USER"] = os.getenv("MYSQL_DATABASE_USER")
+app.config["MYSQL_DATABASE_PASSWORD"] = os.getenv("MYSQL_DATABASE_PASSWORD")
+app.config["MYSQL_DATABASE_DB"] = os.getenv("MYSQL_DATABASE_DB")
+
 app.config["AWS_DEFAULT_REGION"] = os.getenv("AWS_DEFAULT_REGION")
 app.config["AWS_COGNITO_DOMAIN"] = os.getenv("AWS_COGNITO_DOMAIN")
 app.config["AWS_COGNITO_USER_POOL_ID"] = os.getenv("AWS_COGNITO_USER_POOL_ID")
