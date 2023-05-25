@@ -23,3 +23,6 @@ boolean_map = {
     "false": 0,
     "true": 1,
 }
+
+def invert_map(map):
+    return {v: k for k, v in map.items()}

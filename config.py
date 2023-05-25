@@ -2,6 +2,9 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_awscognito import AWSCognitoAuthentication
+from flaskext.mysql import MySQL
+import pymysql
+import pymongo
 from dotenv import load_dotenv
 
 app = Flask(__name__)
@@ -24,5 +27,7 @@ app.config["AWS_COGNITO_USER_POOL_CLIENT_SECRET"] = os.getenv(
 app.config["AWS_COGNITO_REDIRECT_URL"] = os.getenv("AWS_COGNITO_REDIRECT_URL")
 
 CORS(app)
+mysql = MySQL(app, cursorclass=pymysql.cursors.DictCursor)
+mongo = pymongo.MongoClient(username=os.getenv("MONGODB_USERNAME"), password=os.getenv("MONGODB_PASSWORD"))
 aws_auth = AWSCognitoAuthentication(app)
 load_dotenv()

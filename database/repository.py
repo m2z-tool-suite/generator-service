@@ -1,9 +1,6 @@
-import pymysql
-from flaskext.mysql import MySQL
-from config import app
-from utilities.mappings import class_type_map, access_type_map, relationship_type_map, boolean_map
-
-mysql = MySQL(app, cursorclass=pymysql.cursors.DictCursor)
+from config import mysql, mongo
+from database.mappings import class_type_map, access_type_map, relationship_type_map, boolean_map
+from database.document import generate_document
 
    
 def save_classes(diagram_id, syntax_tree):
@@ -56,3 +53,17 @@ def save_classes(diagram_id, syntax_tree):
                 (relationship_type_map['inner'], class_id, class_in_relationship))
 
     db.commit()
+
+def save_report(project, class_type):
+    mysql_db = mysql.get_db()    
+    cursor = mysql_db.cursor()
+    cursor.callproc('generate_document_table', (project, class_type))
+    cursor.execute("SELECT * FROM document_table")
+    rows = cursor.fetchall()
+
+    mongo_db = mongo['m2z-design']
+    collection = mongo_db['reports']
+    document = generate_document(rows, project, class_type)
+    collection.insert_one(document)
+    return document
+
