@@ -28,6 +28,8 @@ app.config["AWS_COGNITO_REDIRECT_URL"] = os.getenv("AWS_COGNITO_REDIRECT_URL")
 
 CORS(app)
 mysql = MySQL(app, cursorclass=pymysql.cursors.DictCursor)
-mongo = pymongo.MongoClient(username=os.getenv("MONGODB_USERNAME"), password=os.getenv("MONGODB_PASSWORD"))
+mongo = pymongo.MongoClient(
+    username=os.getenv("MONGODB_USERNAME"), password=os.getenv("MONGODB_PASSWORD")
+)
 aws_auth = AWSCognitoAuthentication(app)
 load_dotenv()

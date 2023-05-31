@@ -24,5 +24,6 @@ boolean_map = {
     "true": 1,
 }
 
+
 def invert_map(map):
     return {v: k for k, v in map.items()}

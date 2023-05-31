@@ -1,0 +1,67 @@
+{
+  "_id": "meta-document",
+  "document": {
+    "props": ["parameter_project", "parameter_class_type_id"],
+    "template": {
+      "title": "List of all methods and their parameters from class type id - <<<parameter_class_type_id>>>, in project - <<<parameter_project>>>",
+      "diagrams": []
+    }
+  },
+  "diagrams": {
+    "props": ["diagram_id", "diagram_title", "diagram_description"],
+    "template": {
+      "id": "<<<diagram_id>>>",
+      "title": "<<<diagram_title>>>",
+      "description": "<<<diagram_description>>>",
+      "classes": []
+    }
+  },
+  "classes": {
+    "props": [
+      "class_id",
+      "class_name",
+      "class_inner_class",
+      "class_type_id",
+      "class_type_name"
+    ],
+    "template": {
+      "id": "<<<class_id>>>",
+      "name": "<<<class_name>>>",
+      "inner": "<<<class_inner_class>>>",
+      "type": {
+        "id": "<<<class_type_id>>>",
+        "name": "<<<class_type_name>>>"
+      },
+      "methods": []
+    }
+  },
+  "methods": {
+    "props": [
+      "method_id",
+      "method_abstract",
+      "method_name",
+      "method_return_type",
+      "access_type_id",
+      "access_type_name"
+    ],
+    "template": {
+      "id": "<<<method_id>>>",
+      "abstract_": "<<<method_abstract>>>",
+      "name": "<<<method_name>>>",
+      "return_type": "<<<method_return_type>>>",
+      "access_type": {
+        "id": "<<<access_type_id>>>",
+        "name": "<<<access_type_name>>>"
+      },
+      "parameters": []
+    }
+  },
+  "parameters": {
+    "props": ["parameter_id", "parameter_name", "parameter_type"],
+    "template": {
+      "id": "<<<parameter_id>>>",
+      "name": "<<<parameter_name>>>",
+      "type": "<<<parameter_type>>>"
+    }
+  }
+}

@@ -6,7 +6,7 @@ from decoders.decoder import Decoder
 from parsers.style_parser import StyleParser
 from parsers.syntax_parser import SyntaxParser
 from generators.java_generator import JavaCodeGenerator
-from database.repository import save_classes, save_report
+from database.repository import Repository
 from utilities.security import get_user_projects
 
 
@@ -32,18 +32,22 @@ def generate_code():
         return "Bad data provided", 400
 
     diagram_id = request.json["id"]
-    save_classes(diagram_id, syntax_tree)
+    Repository().save_classes(diagram_id, syntax_tree)
 
     shutil.make_archive("temp/generated-code", "zip", "temp/code")
     return send_file("temp/generated-code.zip", as_attachment=True)
+
 
 @app.route("/api/generate-report", methods=["POST"])
 @aws_auth.authentication_required
 def generate_report():
     project, class_type = request.json["project"], request.json["classType"]
     projects = get_user_projects(aws_auth)
-    if project not in map(lambda p: p['name'], projects):
+    if project not in map(lambda p: p["name"], projects):
         return "Not allowed to generate reports for this project", 403
-    
-    document = save_report(project, class_type)
+
+    document = Repository().save_report(project, class_type)
     return jsonify(json_util.dumps(document))
+
+
+Repository().save_meta()
