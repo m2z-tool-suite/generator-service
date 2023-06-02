@@ -4,8 +4,11 @@ from flask_cors import CORS
 from flask_awscognito import AWSCognitoAuthentication
 from flaskext.mysql import MySQL
 import pymysql
-import pymongo
+from pymongo import MongoClient
+from arango import ArangoClient
 from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -26,10 +29,10 @@ app.config["AWS_COGNITO_USER_POOL_CLIENT_SECRET"] = os.getenv(
 )
 app.config["AWS_COGNITO_REDIRECT_URL"] = os.getenv("AWS_COGNITO_REDIRECT_URL")
 
-CORS(app)
+CORS(app, expose_headers=["Content-Disposition"])
 mysql = MySQL(app, cursorclass=pymysql.cursors.DictCursor)
-mongo = pymongo.MongoClient(
+mongo = MongoClient(
     username=os.getenv("MONGODB_USERNAME"), password=os.getenv("MONGODB_PASSWORD")
 )
+arango = ArangoClient(hosts=os.getenv("ARANGODB_HOST"))
 aws_auth = AWSCognitoAuthentication(app)
-load_dotenv()

@@ -1,5 +1,6 @@
+import os
 import json
-from config import mysql, mongo
+from config import mysql, mongo, arango
 from database.mappings import (
     class_type_map,
     access_type_map,
@@ -7,6 +8,10 @@ from database.mappings import (
     boolean_map,
 )
 from generators.document_generator import DocumentGenerator
+from generators.graph_generator import GraphGenerator
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Repository:
@@ -14,30 +19,53 @@ class Repository:
     This class is responsible for saving the data to the database.
     """
 
-    def get_meta(self):
+    def get_document_meta(self):
         """
-        Get the meta document from the database
+        Get the meta for document from the database
         """
 
-        db = mongo["m2z-design"]
+        db = mongo[os.getenv("MONGODB_DATABASE")]
         collection = db["meta"]
         meta = collection.find_one({"_id": "meta-document"})
         return meta
 
-    def save_meta(self):
+    def get_graph_meta(self):
         """
-        Save the meta document to the database
+        Get the meta for document from the database
         """
 
-        db = mongo["m2z-design"]
+        db = mongo[os.getenv("MONGODB_DATABASE")]
         collection = db["meta"]
+        meta = collection.find_one({"_id": "meta-graph"})
+        return meta
 
-        if self.get_meta():
+    def save_document_meta(self):
+        """
+        Save the meta for document to the database
+        """
+
+        if self.get_document_meta():
             return
 
         with open("meta/meta-document.json", "r") as f:
+            db = mongo[os.getenv("MONGODB_DATABASE")]
+            collection = db["meta"]
             meta_document = json.load(f)
             collection.insert_one(meta_document)
+
+    def save_graph_meta(self):
+        """
+        Save the meta for graph to the database
+        """
+
+        if self.get_graph_meta():
+            return
+
+        with open("meta/meta-graph.json", "r") as f:
+            db = mongo[os.getenv("MONGODB_DATABASE")]
+            collection = db["meta"]
+            meta_graph = json.load(f)
+            collection.insert_one(meta_graph)
 
     def save_classes(self, diagram_id, syntax_tree):
         """
@@ -155,9 +183,9 @@ class Repository:
 
         db.commit()
 
-    def save_report(self, project, class_type):
+    def save_document(self, project, class_type):
         """
-        Save the report to the database
+        Save the document to the database
 
         Parameters:
             project: the project name
@@ -166,12 +194,42 @@ class Repository:
 
         mysql_db = mysql.get_db()
         cursor = mysql_db.cursor()
-        cursor.callproc("generate_document_table", (project, class_type))
+        cursor.callproc("document_generate_table", (project, class_type))
         cursor.execute("SELECT * FROM document_table")
         rows = cursor.fetchall()
 
-        mongo_db = mongo["m2z-design"]
-        collection = mongo_db["reports"]
-        document = DocumentGenerator(self.get_meta()).generate(rows)
-        collection.insert_one(document)
+        mongo_db = mongo[os.getenv("MONGODB_DATABASE")]
+        collection = mongo_db["documents"]
+        document = DocumentGenerator(self.get_document_meta()).generate(rows)
+        if document:
+            collection.insert_one(document)
         return document
+
+    def save_graph(self, project, file_path):
+        """
+        Save the graph to the database
+
+        Parameters:
+            project: the project name
+            file_path: the file path
+
+        Returns:
+            graph_name: the name of the graph
+        """
+
+        mysql_db = mysql.get_db()
+        cursor = mysql_db.cursor()
+        cursor.callproc("graph_generate_table", (project,))
+        cursor.execute("SELECT * FROM graph_table")
+        rows = cursor.fetchall()
+
+        arango_db = arango.db(
+            os.getenv("ARANGODB_DATABASE"),
+            os.getenv("ARANGODB_USERNAME"),
+            os.getenv("ARANGODB_PASSWORD"),
+        )
+
+        graph_name = GraphGenerator(self.get_graph_meta(), arango_db).generate(
+            rows, file_path
+        )
+        return graph_name

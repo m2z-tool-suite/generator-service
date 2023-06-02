@@ -401,6 +401,10 @@ class JavaCodeGenerator(CodeGenerator):
         """
         Write generated code to file
 
+        Parameters:
+            file_path: path for the code files to be written to
+            files: list of files to be written
+
         Returns:
             boolean: True if successful, False if unsuccessful
             file_path: path for the code files to be written to

@@ -23,6 +23,19 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
 
+  arangodb:
+    image: arangodb
+    environment:
+      ARANGO_ROOT_PASSWORD: root
+    ports:
+      - '8529:8529'
+    volumes:
+      - arangodb_data:/var/lib/arangodb3
+      - arangodb_apps_data:/var/lib/arangodb3-apps
+
+
 volumes:
   mysql:
   mongo:
+  arangodb_data:
+  arangodb_apps_data:

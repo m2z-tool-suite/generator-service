@@ -9,3 +9,11 @@ class DataGenerator(ABC):
     @abstractmethod
     def generate():
         pass
+
+    @abstractmethod
+    def fill_meta_description():
+        pass
+
+    @abstractmethod
+    def replace_placeholder():
+        pass

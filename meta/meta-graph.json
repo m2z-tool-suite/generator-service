@@ -1,0 +1,71 @@
+{
+  "_id": "meta-graph",
+  "graph_name": "parameter_project",
+  "vertex_collections": {
+    "classes": {
+      "data": [
+        {
+          "_key": "parent_class_id",
+          "props": [
+            "parent_class_id",
+            "parent_class_name",
+            "parent_class_inner_class",
+            "parent_class_type_name",
+            "diagram_title"
+          ],
+          "template": {
+            "_key": "<<<parent_class_id>>>",
+            "name": "<<<parent_class_name>>>",
+            "inner_class": "<<<parent_class_inner_class>>>",
+            "type": "<<<parent_class_type_name>>>",
+            "diagram": "<<<diagram_title>>>"
+          }
+        },
+        {
+          "_key": "child_class_id",
+          "props": [
+            "child_class_id",
+            "child_class_name",
+            "child_class_inner_class",
+            "child_class_type_name",
+            "diagram_title"
+          ],
+          "template": {
+            "_key": "<<<child_class_id>>>",
+            "name": "<<<child_class_name>>>",
+            "inner_class": "<<<child_class_inner_class>>>",
+            "type": "<<<child_class_type_name>>>",
+            "diagram": "<<<diagram_title>>>"
+          }
+        }
+      ]
+    }
+  },
+  "edge_definitions": {
+    "relationships": {
+      "from_vertex_collections": ["classes"],
+      "to_vertex_collections": ["classes"],
+      "data": [
+        {
+          "_key": "relationship_id",
+          "from_vertex_collection": "classes",
+          "to_vertex_collection": "classes",
+          "props": [
+            "relationship_id",
+            "relationship_type_name",
+            "relationship_parent_class_id",
+            "relationship_child_class_id",
+            "from_vertex_collection",
+            "to_vertex_collection"
+          ],
+          "template": {
+            "_key": "<<<relationship_id>>>",
+            "_from": "<<<from_vertex_collection>>>/<<<relationship_parent_class_id>>>",
+            "_to": "<<<to_vertex_collection>>>/<<<relationship_child_class_id>>>",
+            "type": "<<<relationship_type_name>>>"
+          }
+        }
+      ]
+    }
+  }
+}

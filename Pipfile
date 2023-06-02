@@ -15,6 +15,7 @@ flask-awscognito = "*"
 python-dotenv = "*"
 flask-mysql = "*"
 pymongo = "*"
+python-arango = "*"
 
 [requires]
 python_version = "3.10"

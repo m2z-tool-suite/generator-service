@@ -43,6 +43,18 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: root
       ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo:27017/
 
+  arangodb:
+    image: arangodb
+    environment:
+      ARANGO_ROOT_PASSWORD: root
+    ports:
+      - '8529:8529'
+    volumes:
+      - arangodb_data:/var/lib/arangodb3
+      - arangodb_apps_data:/var/lib/arangodb3-apps
+
 volumes:
   mysql:
   mongo:
+  arangodb_data:
+  arangodb_apps_data:
