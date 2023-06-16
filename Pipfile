@@ -16,6 +16,7 @@ python-dotenv = "*"
 flask-mysql = "*"
 pymongo = "*"
 python-arango = "*"
+bson = "*"
 
 [requires]
 python_version = "3.10"
