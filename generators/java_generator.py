@@ -131,6 +131,16 @@ class JavaCodeGenerator(CodeGenerator):
         ):
             class_string += "\n"
 
+        if "class" in type_of_class:
+            class_string += self.generate_constructors(
+                syntax_tree,
+                _class["name"],
+                _class["properties"],
+                all_associations,
+                _class["relationships"]["extends"],
+                indent,
+            )
+
         class_string += self.generate_methods(
             _class["methods"],
             _class["properties"],
@@ -263,6 +273,83 @@ class JavaCodeGenerator(CodeGenerator):
             composition_parents.append(syntax_tree[composition]["name"])
 
         return composition_parents
+
+    def get_parent_properties(self, syntax_tree, extends, parent_properties):
+        """
+        Get the properties of the parent class
+
+        Parameters:
+            syntax_tree: syntax_tree of the drawio file
+            extends: list of classes that the class extends
+            parent_properties: list of parent properties
+
+        Returns:
+            parent_properties: list of parent properties
+        """
+
+        for e in extends:
+            properties = list(syntax_tree[e]["properties"].values())
+            if properties:
+                parent_properties.insert(0, *properties)
+
+            self.get_parent_properties(
+                syntax_tree,
+                syntax_tree[e]["relationships"]["extends"],
+                parent_properties,
+            )
+
+        return parent_properties
+
+    def generate_constructors(
+        self, syntax_tree, class_name, properties, all_associations, extends, indent
+    ):
+        """
+        Generate constructors for the class
+
+        Parameters:
+            syntax_tree: syntax_tree of the drawio file
+            class_name: name of the class
+            properties: dictionary of properties
+            all_asssociations: list of associations, aggreatation children, aggregation parents, composition children, composition parents
+            extends: list of classes that the class extends
+            indent: indentation level
+
+        Returns:
+            constructors_string: string of the constructors
+        """
+
+        parent_params = self.get_parent_properties(syntax_tree, extends, list())
+
+        if not properties and not all_associations and not parent_params:
+            return ""
+
+        tabs = "\t" * indent
+        constructors_string = f"{tabs}public {class_name}() {{}}\n\n"
+
+        child_params = [
+            {"type": p["type"], "name": p["name"]} for p in properties.values()
+        ] + [{"type": a, "name": a[0].lower() + a[1:]} for a in all_associations]
+
+        parent_params = self.get_parent_properties(syntax_tree, extends, list())
+
+        all_params = parent_params + child_params
+
+        constructor_signature = ", ".join(
+            [f"{p['type']} {p['name']}" for p in all_params]
+        )
+
+        constructor_body = ""
+        if extends:
+            super_args = ", ".join([p["name"] for p in parent_params])
+            constructor_body = f"\t{tabs}super({super_args});\n"
+
+        constructor_body += "".join(
+            [f"\t{tabs}this.{p['name']} = {p['name']}\n" for p in child_params]
+        )
+
+        constructors_string += f"{tabs}public {class_name}({constructor_signature}) {{\n{constructor_body}\t}}\n\n"
+
+        return constructors_string
 
     def generate_methods(
         self,

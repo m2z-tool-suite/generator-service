@@ -39,6 +39,14 @@ class CodeGenerator(ABC):
         pass
 
     @abstractmethod
+    def get_parent_properties():
+        pass
+
+    @abstractmethod
+    def generate_constructors():
+        pass
+
+    @abstractmethod
     def generate_methods():
         pass
 
