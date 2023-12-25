@@ -8,7 +8,9 @@ from pymongo import MongoClient
 from arango import ArangoClient
 from dotenv import load_dotenv
 
-load_dotenv()
+active_profile = os.getenv("ACTIVE_PROFILE")
+if active_profile == "prod":
+    load_dotenv(dotenv_path=".env.prod", override=True)
 
 app = Flask(__name__)
 

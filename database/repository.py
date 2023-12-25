@@ -9,9 +9,6 @@ from database.mappings import (
 )
 from generators.document_generator import DocumentGenerator
 from generators.graph_generator import GraphGenerator
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class Repository:

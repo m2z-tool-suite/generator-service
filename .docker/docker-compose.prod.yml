@@ -1,18 +1,24 @@
 version: '3.8'
 
 services:
-  mysql:
+  database-mysql:
     image: mysql:8.0-debian
     restart: always
     ports:
       - '3306:3306'
     volumes:
       - mysql:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD']
+      interval: 25s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: m2z-design
 
-  mongo:
+  database-mongo:
     image: mongo
     restart: always
     ports:
@@ -23,7 +29,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
 
-  arangodb:
+  database-arango:
     image: arangodb
     environment:
       ARANGO_ROOT_PASSWORD: root
@@ -32,6 +38,18 @@ services:
     volumes:
       - arangodb_data:/var/lib/arangodb3
       - arangodb_apps_data:/var/lib/arangodb3-apps
+
+  generator-service:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    depends_on:
+      database-mysql:
+        condition: service_healthy
+    environment:
+      ACTIVE_PROFILE: prod
 
 
 volumes:
